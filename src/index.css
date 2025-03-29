@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-bg: #e6e9ef;
+  --neomorphic-flat: -6px -6px 12px #ffffff, 6px 6px 12px #c8ccd4;
+  --neomorphic-pressed: inset -6px -6px 12px #ffffff, inset 6px 6px 12px #c8ccd4;
+  --neomorphic-card: 12px 12px 24px #c8ccd4, -12px -12px 24px #ffffff;
+}
+
+@layer base {
+  body {
+    @apply bg-[#e6e9ef] text-gray-800;
+  }
+}
+
+@layer components {
+  .neo-btn {
+    @apply relative px-6 py-3 rounded-xl bg-[#e6e9ef] font-medium transition-all duration-200 select-none;
+    box-shadow: var(--neomorphic-flat);
+  }
+  
+  .neo-btn:hover {
+    @apply transform scale-[1.02];
+  }
+  
+  .neo-btn:active {
+    box-shadow: var(--neomorphic-pressed);
+    @apply transform scale-[0.98];
+  }
+
+  .neo-card {
+    @apply bg-[#e6e9ef] rounded-2xl p-6 transition-all duration-300;
+    box-shadow: var(--neomorphic-card);
+  }
+  
+  .neo-card:hover {
+    @apply transform scale-[1.01];
+  }
+
+  .neo-input {
+    @apply bg-[#e6e9ef] rounded-xl px-4 py-2 w-full transition-all duration-200;
+    box-shadow: var(--neomorphic-pressed);
+  }
+  
+  .neo-input:focus {
+    @apply outline-none;
+    box-shadow: var(--neomorphic-flat);
+  }
+
+  .neo-select {
+    @apply bg-[#e6e9ef] rounded-xl px-4 py-2 w-full appearance-none transition-all duration-200;
+    box-shadow: var(--neomorphic-pressed);
+  }
+
+  .neo-select:focus {
+    @apply outline-none;
+    box-shadow: var(--neomorphic-flat);
+  }
+
+  .neo-checkbox {
+    @apply h-4 w-4 rounded text-[#06D6A0] focus:ring-[#06D6A0] bg-[#e6e9ef] border-gray-300 transition-all duration-200;
+    box-shadow: var(--neomorphic-pressed);
+  }
+
+  .neo-radio {
+    @apply h-4 w-4 text-[#06D6A0] focus:ring-[#06D6A0] bg-[#e6e9ef] border-gray-300 transition-all duration-200;
+    box-shadow: var(--neomorphic-pressed);
+  }
+
+  .neo-tab {
+    @apply px-4 py-2 font-medium text-sm transition-all duration-200;
+  }
+
+  .neo-tab.active {
+    @apply text-[#06D6A0] border-b-2 border-[#06D6A0];
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .neo-btn,
+    .neo-card,
+    .neo-input,
+    .neo-select,
+    .neo-checkbox,
+    .neo-radio,
+    .neo-tab {
+      @apply transition-none transform-none;
+    }
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e6e9ef;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c8ccd4;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8adb4;
+}
