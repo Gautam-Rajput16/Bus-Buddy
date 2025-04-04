@@ -35,7 +35,9 @@ const BusFilters = () => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Filters</h3>
         <button 
-          onClick={clearFilters}
+          onClick={() => {
+            clearFilters(); // Reset filters and fetch all buses
+          }}
           className="text-sm text-[#06D6A0] hover:text-[#05bf8f]"
         >
           Clear All

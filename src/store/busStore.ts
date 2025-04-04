@@ -179,15 +179,24 @@ export const useBusStore = create<BusStore>((set, get) => ({
     return baseFare + serviceFee;
   },
   resetSelection: () => set({ selectedBus: null, selectedSeats: [] }),
-  clearFilters: () => set({
-    filters: {
-      type: [],
-      priceRange: [0, 5000],
-      rating: 0,
-      departureTime: [],
-      amenities: []
-    }
-  }),
+  clearFilters: () => {
+    set((state) => ({
+      filters: {
+        type: [],
+        priceRange: [0, 5000],
+        rating: 0,
+        departureTime: [],
+        amenities: [],
+      },
+    }));
+    const { searchParams } = get(); // Get the current search parameters
+    const mockBuses = generateMockBuses(
+      searchParams.source,
+      searchParams.destination,
+      searchParams.date
+    ); // Generate all buses based on search parameters
+    set({ buses: mockBuses }); // Reset the bus list to show all buses
+  },
   sortBuses: (sortBy) => {
     const { buses } = get();
     let sortedBuses = [...buses];
