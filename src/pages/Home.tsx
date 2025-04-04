@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Bus, Shield,  Star } from 'lucide-react';
+import { Calendar, MapPin, Bus, Shield,  Star } from 'lucide-react';
 import { useBusStore } from '../store/busStore';
 import { indianCities, popularRoutes } from '../data/indianCities';
 import { format } from 'date-fns';
@@ -17,7 +17,6 @@ const Home = () => {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [passengers, setPassengers] = useState(1);
   const [sourceDropdown, setSourceDropdown] = useState(false);
   const [destinationDropdown, setDestinationDropdown] = useState(false);
   const [filteredSourceCities, setFilteredSourceCities] = useState<string[]>([]);
@@ -57,7 +56,7 @@ const Home = () => {
       source,
       destination,
       date,
-      passengers
+   
     });
     
     searchBuses();
@@ -209,21 +208,7 @@ const Home = () => {
                   </div>
                 </div>
 
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Passengers</label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                    <select
-                      value={passengers}
-                      onChange={(e) => setPassengers(parseInt(e.target.value))}
-                      className="neo-select pl-10"
-                    >
-                      {[1, 2, 3, 4, 5, 6].map(num => (
-                        <option key={num} value={num}>{num} {num === 1 ? 'Passenger' : 'Passengers'}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+               
               </div>
 
               <NeomorphicButton
