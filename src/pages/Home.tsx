@@ -117,7 +117,7 @@ const Home = () => {
           {/* Search Form */}
           <AnimatedCard className="max-w-3xl mx-auto" delay={0.3}>
             <form onSubmit={handleSearch} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
                   <div className="relative">
@@ -207,8 +207,6 @@ const Home = () => {
                     />
                   </div>
                 </div>
-
-               
               </div>
 
               <NeomorphicButton
