@@ -1,22 +1,31 @@
 import React, { useState } from 'react';
 import { useBusStore } from '../store/busStore';
+import { Info } from 'lucide-react';
+
+interface Seat {
+  id: number;
+  number: string;
+  status: 'available' | 'booked' | 'selected';
+  price: number;
+  type: 'window' | 'aisle' | 'middle';
+  side: 'left' | 'right';
+  deck: 'lower' | 'upper';
+}
 
 const SeatLayout = () => {
   const { selectedBus, selectedSeats, selectSeat, deselectSeat } = useBusStore();
   const [selectedDeck, setSelectedDeck] = useState<'lower' | 'upper'>('lower');
+  const [hoveredSeat, setHoveredSeat] = useState<Seat | null>(null);
 
   // Generate a realistic seat layout based on bus type
   const generateSeats = () => {
     const isSleeper = selectedBus?.type.includes('Sleeper');
     const isDoubleDecker = isSleeper;
-    
-    // For sleeper buses, we'll have fewer seats but they're larger
-    const seatsPerRow = isSleeper ? 2 : 3;
-    const rows = isSleeper ? 10 : 13;
+    const rows = 12; // Standard number of rows
     
     // Create a list of booked seats (randomly)
     const bookedSeats = new Set();
-    const totalSeats = rows * seatsPerRow * (isDoubleDecker ? 2 : 1);
+    const totalSeats = rows * 5 * (isDoubleDecker ? 2 : 1); // 5 seats per row (3 + 2)
     const bookedCount = Math.floor(Math.random() * (totalSeats * 0.7));
     
     for (let i = 0; i < bookedCount; i++) {
@@ -24,43 +33,88 @@ const SeatLayout = () => {
     }
     
     // Generate seats
-    const seats = [];
+    const seats: Seat[] = [];
     let seatId = 1;
     
-    // Generate for lower deck
-    for (let row = 1; row <= rows; row++) {
-      for (let col = 1; col <= seatsPerRow; col++) {
-        const id = seatId++;
-        const seatType = col === 1 ? 'window' : col === seatsPerRow ? 'window' : 'aisle';
-        
-        seats.push({
-          id,
-          number: `L${row}${String.fromCharCode(64 + col)}`,
-          status: bookedSeats.has(id) ? 'booked' : 'available',
-          price: selectedBus?.price || 0,
-          type: seatType,
-          deck: 'lower'
-        });
-      }
-    }
-    
-    // Generate for upper deck if sleeper
-    if (isDoubleDecker) {
+    // Helper function to generate seats for a deck
+    const generateDeckSeats = (deck: 'lower' | 'upper') => {
       for (let row = 1; row <= rows; row++) {
-        for (let col = 1; col <= seatsPerRow; col++) {
-          const id = seatId++;
-          const seatType = col === 1 ? 'window' : col === seatsPerRow ? 'window' : 'aisle';
-          
-          seats.push({
-            id,
-            number: `U${row}${String.fromCharCode(64 + col)}`,
-            status: bookedSeats.has(id) ? 'booked' : 'available',
-            price: selectedBus?.price || 0,
-            type: seatType,
-            deck: 'upper'
-          });
+        if (selectedBus?.type.includes('Sleeper')) {
+          // Sleeper bus: 2x2 layout
+          // Left side (2 seats)
+          for (let col = 1; col <= 2; col++) {
+            const id = seatId++;
+            const seatType = col === 1 ? 'window' : 'aisle'; // First seat is window, second is aisle
+
+            seats.push({
+              id,
+              number: `${deck === 'upper' ? 'U' : 'L'}${row}${String.fromCharCode(64 + col)}`,
+              status: bookedSeats.has(id) ? 'booked' : 'available',
+              price: selectedBus?.price || 0,
+              type: seatType,
+              side: 'left',
+              deck
+            });
+          }
+
+          // Right side (2 seats)
+          for (let col = 1; col <= 2; col++) {
+            const id = seatId++;
+            const seatType = col === 1 ? 'aisle' : 'window'; // First seat is aisle, second is window
+
+            seats.push({
+              id,
+              number: `${deck === 'upper' ? 'U' : 'L'}${row}${String.fromCharCode(64 + col + 2)}`,
+              status: bookedSeats.has(id) ? 'booked' : 'available',
+              price: selectedBus?.price || 0,
+              type: seatType,
+              side: 'right',
+              deck
+            });
+          }
+        } else {
+          // Seater bus: 3x2 layout
+          // Left side (3 seats)
+          for (let col = 1; col <= 3; col++) {
+            const id = seatId++;
+            const seatType = col === 1 ? 'window' : col === 3 ? 'aisle' : 'middle';
+
+            seats.push({
+              id,
+              number: `${deck === 'upper' ? 'U' : 'L'}${row}${String.fromCharCode(64 + col)}`,
+              status: bookedSeats.has(id) ? 'booked' : 'available',
+              price: selectedBus?.price || 0,
+              type: seatType,
+              side: 'left',
+              deck
+            });
+          }
+
+          // Right side (2 seats)
+          for (let col = 1; col <= 2; col++) {
+            const id = seatId++;
+            const seatType = col === 1 ? 'aisle' : 'window';
+
+            seats.push({
+              id,
+              number: `${deck === 'upper' ? 'U' : 'L'}${row}${String.fromCharCode(64 + col + 3)}`,
+              status: bookedSeats.has(id) ? 'booked' : 'available',
+              price: selectedBus?.price || 0,
+              type: seatType,
+              side: 'right',
+              deck
+            });
+          }
         }
       }
+    };
+    
+    // Generate lower deck seats
+    generateDeckSeats('lower');
+    
+    // Generate upper deck if sleeper bus
+    if (isDoubleDecker) {
+      generateDeckSeats('upper');
     }
     
     return seats;
@@ -69,10 +123,7 @@ const SeatLayout = () => {
   const seats = generateSeats();
   const filteredSeats = seats.filter(seat => seat.deck === selectedDeck);
   
-  const isSleeper = selectedBus?.type.includes('Sleeper');
-  const seatsPerRow = isSleeper ? 2 : 3;
-
-  const handleSeatClick = (seat: typeof seats[0]) => {
+  const handleSeatClick = (seat: Seat) => {
     if (seat.status === 'booked') return;
     
     const isSelected = selectedSeats.some((s) => s.id === seat.id);
@@ -83,12 +134,52 @@ const SeatLayout = () => {
     }
   };
 
+  const getSeatColor = (seat: Seat) => {
+    const isSelected = selectedSeats.some((s) => s.id === seat.id);
+    
+    if (isSelected) return 'bg-[#2196F3] hover:bg-[#1976D2] text-white';
+    if (seat.status === 'booked') return 'bg-[#808080] cursor-not-allowed text-white';
+    return 'bg-[#E5E5E5] hover:bg-[#D5D5D5] text-gray-800';
+  };
+
+  const renderMiniMap = () => {
+    if (!selectedBus) return null;
+    return (
+      <div className="absolute top-4 right-4 border border-gray-200 rounded-lg p-2 bg-white shadow-lg">
+        <div className="text-xs font-medium mb-1">Bus Layout</div>
+        <div className="flex gap-2">
+          <div className="grid grid-cols-3 gap-[2px]">
+            {filteredSeats
+              .filter(seat => seat.side === 'left')
+              .map((seat) => (
+                <div
+                  key={`mini-${seat.id}`}
+                  className={`w-[6px] h-[6px] rounded-sm ${getSeatColor(seat)}`}
+                />
+              ))}
+          </div>
+          <div className="w-[4px]" /> {/* Aisle */}
+          <div className="grid grid-cols-2 gap-[2px]">
+            {filteredSeats
+              .filter(seat => seat.side === 'right')
+              .map((seat) => (
+                <div
+                  key={`mini-${seat.id}`}
+                  className={`w-[6px] h-[6px] rounded-sm ${getSeatColor(seat)}`}
+                />
+              ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-4">Select Your Seats</h3>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-xl relative">
+      <h3 className="text-xl font-semibold mb-6">Select Your Seats</h3>
       
       {/* Bus info */}
-      <div className="mb-6 p-3 bg-gray-50 rounded-md">
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <p className="font-medium">{selectedBus?.name} - {selectedBus?.type}</p>
         <p className="text-sm text-gray-600">
           {selectedBus?.source} → {selectedBus?.destination} | {selectedBus?.date} | {selectedBus?.departureTime}
@@ -96,14 +187,14 @@ const SeatLayout = () => {
       </div>
       
       {/* Deck selector for sleeper buses */}
-      {isSleeper && (
-        <div className="flex mb-4 border rounded-md overflow-hidden">
+      {selectedBus?.type.includes('Sleeper') && (
+        <div className="flex mb-6 border rounded-lg overflow-hidden">
           <button
             onClick={() => setSelectedDeck('lower')}
             className={`flex-1 py-2 text-center ${
               selectedDeck === 'lower' 
-                ? 'bg-[#06D6A0] text-white' 
-                : 'bg-gray-100 text-gray-700'
+                ? 'bg-[#2196F3] text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Lower Deck
@@ -112,76 +203,128 @@ const SeatLayout = () => {
             onClick={() => setSelectedDeck('upper')}
             className={`flex-1 py-2 text-center ${
               selectedDeck === 'upper' 
-                ? 'bg-[#06D6A0] text-white' 
-                : 'bg-gray-100 text-gray-700'
+                ? 'bg-[#2196F3] text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Upper Deck
           </button>
         </div>
       )}
-      
-      {/* Driver indicator */}
-      <div className="flex justify-end mb-2">
-        <div className="bg-gray-200 rounded-md p-2 text-xs text-center w-16">
-          Driver
-        </div>
-      </div>
-      
+
       {/* Seat layout */}
-      <div className="border border-gray-300 rounded-md p-4 mb-6">
-        <div className={`grid grid-cols-${seatsPerRow} gap-2`} style={{ gridTemplateColumns: `repeat(${seatsPerRow}, 1fr)` }}>
-          {filteredSeats.map((seat) => {
-            const isSelected = selectedSeats.some((s) => s.id === seat.id);
-            const status = isSelected ? 'selected' : seat.status;
-            
-            return (
-              <button
-                key={seat.id}
-                onClick={() => handleSeatClick(seat)}
-                disabled={status === 'booked'}
-                className={`
-                  p-2 rounded-md text-sm font-medium transition-colors relative
-                  ${
-                    status === 'available'
-                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                      : status === 'booked'
-                      ? 'bg-red-100 text-red-800 cursor-not-allowed'
-                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                  }
-                  ${isSleeper ? 'h-16' : 'h-10'}
-                `}
-              >
-                <span className="absolute top-1 left-1 text-xs">{seat.number}</span>
-                {isSleeper && <span className="absolute bottom-1 right-1 text-xs">₹{seat.price}</span>}
-                {!isSleeper && <span className="absolute top-1 right-1 text-xs">₹{seat.price}</span>}
-              </button>
-            );
-          })}
+      <div className="relative">
+        {/* Seat layout container */}
+        <div className="border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex gap-8 justify-center">
+            {/* Left side (seats) */}
+            <div className={`grid grid-cols-${selectedBus?.type.includes('Sleeper') ? '2' : '3'} gap-4`}>
+              {filteredSeats
+                .filter(seat => seat.side === 'left')
+                .map((seat) => {
+                  const isSelected = selectedSeats.some((s) => s.id === seat.id);
+                  
+                  return (
+                    <button
+                      key={seat.id}
+                      onClick={() => handleSeatClick(seat)}
+                      onMouseEnter={() => setHoveredSeat(seat)}
+                      onMouseLeave={() => setHoveredSeat(null)}
+                      disabled={seat.status === 'booked'}
+                      className={`
+                        relative ${selectedBus?.type.includes('Sleeper') ? 'w-8 h-12' : 'w-10 h-10'} 
+                        rounded-${selectedBus?.type.includes('Sleeper') ? 'md' : 'lg'} 
+                        transition-all duration-200
+                        ${getSeatColor(seat)}
+                        ${isSelected ? 'ring-2 ring-[#2196F3] ring-offset-2' : ''}
+                      `}
+                    >
+                      <span className="text-xs">{seat.number}</span>
+
+                      {/* Hover tooltip */}
+                      {hoveredSeat?.id === seat.id && (
+                        <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-32 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                          <p>Seat: {seat.number}</p>
+                          <p>Type: {seat.type}</p>
+                          <p>Price: ₹{seat.price}</p>
+                          
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+
+            {/* Aisle */}
+            <div className="w-8 h-full bg-gray-100 rounded-md flex items-center justify-center">
+              <span className="text-xs text-gray-500 rotate-90">AISLE</span>
+            </div>
+
+            {/* Right side (2 seats) */}
+            <div className="grid grid-cols-2 gap-4">
+              {filteredSeats
+                .filter(seat => seat.side === 'right')
+                .map((seat) => {
+                  const isSelected = selectedSeats.some((s) => s.id === seat.id);
+                  
+                  return (
+                    <button
+                      key={seat.id}
+                      onClick={() => handleSeatClick(seat)}
+                      onMouseEnter={() => setHoveredSeat(seat)}
+                      onMouseLeave={() => setHoveredSeat(null)}
+                      disabled={seat.status === 'booked'}
+                      className={`
+                        relative ${selectedBus?.type.includes('Sleeper') ? 'w-8 h-12' : 'w-10 h-10'} 
+                        rounded-${selectedBus?.type.includes('Sleeper') ? 'md' : 'lg'} 
+                        transition-all duration-200
+                        ${getSeatColor(seat)}
+                        ${isSelected ? 'ring-2 ring-[#2196F3] ring-offset-2' : ''}
+                      `}
+                    >
+                      <span className="text-xs">{seat.number}</span>
+                      
+                      {/* Hover tooltip */}
+                      {hoveredSeat?.id === seat.id && (
+                        <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-32 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg">
+                          <p>Seat: {seat.number}</p>
+                          <p>Type: {seat.type}</p>
+                          <p>Price: ₹{seat.price}</p>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
         </div>
+
+        {/* Mini-map */}
+        {renderMiniMap()}
       </div>
 
       {/* Legend */}
-      <div className="flex justify-between items-center p-4 bg-gray-50 rounded-md">
-        <div className="flex gap-4">
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-100 rounded"></div>
+            <div className="w-4 h-4 rounded bg-[#E5E5E5]" />
             <span className="text-sm">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-100 rounded"></div>
-            <span className="text-sm">Booked</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-100 rounded"></div>
+            <div className="w-4 h-4 rounded bg-[#2196F3]" />
             <span className="text-sm">Selected</span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-[#808080]" />
+            <span className="text-sm">Booked</span>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-600">Selected: {selectedSeats.length}</p>
-          <p className="font-semibold">
-            Total: ₹{selectedSeats.reduce((sum, seat) => sum + seat.price, 0)}
-          </p>
+        
+        <div className="flex items-center gap-2">
+          <Info className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-600">
+            Hover over seats to see details
+          </span>
         </div>
       </div>
     </div>
